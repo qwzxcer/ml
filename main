@@ -1,0 +1,96 @@
+#создай здесь свой индивидуальный проект!
+import pandas as pd 
+df=pd.read_csv('train.csv')
+print(df.info())
+#langs не нужен
+#id не нужен
+#bdate не нужен
+#has_photo не нужен тк кол-во почти одинаковое
+#city не нужен
+#followers_count не нужен кажется
+#graduation не нужен
+#last_seen не нужен, тк не переводится
+#occupation_name не нужен
+#has_mobile не нужен
+#people_main не нужен тк не влияет
+#career_start ne nado
+#career_end ne nado
+#остались:sex, education_form, education_status, occupation_type(отчистить),result
+df.drop(['life_main','id','bdate','has_photo','has_mobile','followers_count','graduation',
+'relation','langs','people_main','city','last_seen','occupation_name','career_start',
+'career_end'], axis=1, inplace=True)
+print(df.info())
+print(df['occupation_type'].value_counts())
+df['education_form'].fillna('Full-time', inplace=True)
+def fill_form(education_form):
+    if education_form=='Full-time':
+        return 1
+    if education_form=='Distance Learning':
+        return 2
+    if education_form=='Part-time':
+        return 3
+    return 0
+df['education_form']=df['education_form'].apply(fill_form)
+df['occupation_type'].fillna('university', inplace=True)
+def fill_type(occupation_type):
+    if occupation_type=='university':
+        return 1
+    if occupation_type=='work':
+        return 2
+    return 0
+df['occupation_type']=df['occupation_type'].apply(fill_type)
+df['education_status'].fillna('Alumnus (Specialist)', inplace=True)
+def fill_status(education_status):
+    if education_status == "Undergraduate applicant":
+        return 1
+    elif education_status == "Student (Bachelor's)":
+        return 2
+    elif education_status == "Alumnus (Bachelor's)":
+        return 3
+    elif education_status == "Student (Master's)":
+        return 4
+    elif education_status == "Alumnus (Master's)":
+        return 5
+    elif education_status == "Student (Specialist)":
+        return 6
+    elif education_status == "Alumnus (Specialist)":
+        return 7
+    elif education_status == "Phd":
+        return 8
+    elif education_status == "Candidate of Sciences":
+
+        return 9
+    return 0
+df['education_status']=df['education_status'].apply(fill_status)
+print(df['education_form'].value_counts())
+print(df['occupation_type'].value_counts())
+print(df['education_status'].value_counts())
+print(df.info())
+#step2
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score
+#x-датафрейм без столбца result
+x=df.drop('result',axis=1)
+#y-значения resulе
+y=df['result']
+#случайным образом разбивает данные на обучающие и тестовые
+x_train, x_test, y_train, y_test = train_test_split(x,y,test_size=0.25)
+#стандартизация значений
+sc=StandardScaler()
+#для обучающих данных
+x_train=sc.fit_transform(x_train)
+#для тестовых данных
+x_test=sc.transform(x_test)
+#метод ближайших соседей
+#создаем классификатор KNN
+classifier = KNeighborsClassifier(n_neighbors=5)
+#fit подбирает признаки из набора обучающих данных
+classifier.fit(x_train, y_train)
+#predict предсказывает значение для тестовых данных
+y_pred = classifier.predict(x_test)#расчет прогноза целевой переменной
+#accuracy_score точность предсказания
+print(accuracy_score(y_test, y_pred)*100)
+#confussion_matrix строит матрицу предсказанных значений для оценки точности 
+print(confusion_matrix(y_test,y_pred))
